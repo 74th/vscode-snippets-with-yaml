@@ -1,9 +1,9 @@
 {
-  "$id": "https://raw.githubusercontent.com/74th/vscode-snippets-with-yaml/master/snippet.schema.json",
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/74th/vscode-snippets-with-yaml/master/snippet.schema.json",
   "title": "VS Code Snippets",
   "type": "object",
-  "propertyNames": {
+  "patternProperties": {
     ".*": {
       "type": "object",
       "properties": {
