@@ -1,12 +1,32 @@
 {
   "name": "editing-snippets-with-yaml",
   "displayName": "editing snippets with yaml",
-  "description": "Editing snippets tith YAML format",
-  "version": "0.0.1",
+  "description": "Editing snippets with YAML format",
+  "version": "0.9.0",
+  "publisher": "74th",
+  "icon": "icon.png",
+  "license": "MIT",
   "engines": {
     "vscode": "^1.45.0"
   },
+  "galleryBanner": {
+    "color": "#101010",
+    "theme": "dark"
+  },
+  "author": {
+    "name": "74th",
+    "url": "https://github.com/74th"
+  },
+  "homepage": "https://github.com/74th/vscode-snippets-with-yaml",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/74th/vscode-snippets-with-yaml.git"
+  },
+  "bugs": {
+    "url": "https://github.com/74th/vscode-snippets-with-yaml/issues"
+  },
   "categories": [
+    "Snippets",
     "Other"
   ],
   "activationEvents": [
@@ -17,7 +37,7 @@
     "commands": [
       {
         "command": "editing-snippets-by-yaml.configureUserSnippets",
-        "title": "Configure User Snippets (YAML)"
+        "title": "VSConfigure User Snippets (YAML)"
       }
     ]
   },
