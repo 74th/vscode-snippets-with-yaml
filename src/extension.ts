@@ -1,11 +1,12 @@
 import * as path from 'path';
 import { promises as fs, open } from 'fs'
+import * as os from 'os';
+import * as process from 'process';
 
 import * as yaml from 'yaml';
 import * as vscode from 'vscode';
 import * as jsoncParser from 'jsonc-parser';
 import * as prettier from 'prettier';
-// import { windows, android, linux, macos, tizen } from 'platform-detect/os';
 
 interface Snippet {
     prefix: string
@@ -15,7 +16,26 @@ interface Snippet {
 type SnippetDocument = { [index: string]: Snippet };
 
 function getSnippetsDir(): string {
-    return "/home/nnyn/.config/Code - Insiders/User/snippets";
+
+    let codeName = "Code"
+    if (vscode.env.appName.includes("Insiders")) {
+        codeName = "Code - Insiders"
+    }
+    if (vscode.env.appName.includes("OSS")) {
+        codeName = "Code - OSS"
+    }
+    let result = "";
+    switch (os.platform()) {
+        case "win32":
+            break;
+        case "darwin":
+            result = path.join(process.env["HOME"] as string, "Library", "Application Support")
+            break;
+        default:
+            result = path.join(process.env["HOME"] as string, ".config")
+            break;
+    }
+    return path.join(result, codeName, "User", "snippets")
 }
 
 async function getAvailableSnippets(snippetsDir: string): Promise<string[]> {
@@ -53,11 +73,11 @@ async function listSnipeetsLanguageItems(snippetsDir: string): Promise<PickSnipp
 
     if (vscode.window.activeTextEditor) {
         openedLangID = vscode.window.activeTextEditor.document.languageId;
+        const available = availableList.includes(openedLangID);
         result.push({
             label: openedLangID,
             languageID: openedLangID,
-            detail: "detail-opened",
-            description: "description-opened",
+            description: "opened file " + (available ? openedLangID + ".json" : ""),
             available: availableList.includes(openedLangID),
             path: path.join(snippetsDir, openedLangID + ".json"),
         })
@@ -69,8 +89,7 @@ async function listSnipeetsLanguageItems(snippetsDir: string): Promise<PickSnipp
         result.push({
             label: langID,
             languageID: langID,
-            detail: "detail-available",
-            description: "description-available",
+            description: langID + ".json",
             available: true,
             path: path.join(snippetsDir, langID + ".json"),
         })
@@ -83,8 +102,6 @@ async function listSnipeetsLanguageItems(snippetsDir: string): Promise<PickSnipp
         result.push({
             label: langID,
             languageID: langID,
-            detail: "detail-new",
-            description: "description-new",
             available: false,
             path: path.join(snippetsDir, langID + ".json"),
         })
@@ -143,7 +160,6 @@ async function convertJSONSnippets(yamlPath: string) {
 
 export async function activate(context: vscode.ExtensionContext) {
 
-    console.log('Congratulations, your extension "editing-snippets-by-yaml" is now active!');
     const snippetsDir = getSnippetsDir();
 
     let disposable = vscode.commands.registerCommand('editing-snippets-by-yaml.configureUserSnippets', async () => {
