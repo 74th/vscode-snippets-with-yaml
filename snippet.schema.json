@@ -3,10 +3,8 @@
   "$id": "https://raw.githubusercontent.com/74th/vscode-snippets-with-yaml/master/snippet.schema.json",
   "title": "VS Code Snippets",
   "type": "object",
-  "properties": {
-    "$schema": { "type": "string" }
-  },
   "patternProperties": {
+    "$schema": { "type": "string" },
     ".*": {
       "type": "object",
       "properties": {
