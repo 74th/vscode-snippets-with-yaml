@@ -1,7 +1,7 @@
 {
-  "name": "editing-snippets-by-yaml",
-  "displayName": "editing snippets by yaml",
-  "description": "Editing snippets by YAML format",
+  "name": "editing-snippets-with-yaml",
+  "displayName": "editing snippets with yaml",
+  "description": "Editing snippets tith YAML format",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.45.0"
@@ -26,8 +26,7 @@
     "compile": "tsc -p ./",
     "lint": "eslint src --ext ts",
     "watch": "tsc -watch -p ./",
-    "pretest": "yarn run compile && yarn run lint",
-    "test": "node ./out/test/runTest.js"
+    "pretest": "yarn run compile && yarn run lint"
   },
   "devDependencies": {
     "@types/glob": "^7.1.1",
