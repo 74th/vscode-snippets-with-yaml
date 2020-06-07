@@ -4,7 +4,7 @@
   "title": "VS Code Snippets",
   "type": "object",
   "patternProperties": {
-    "$schema": { "type": "string" },
+    "\\$schema": { "type": "string" },
     ".*": {
       "type": "object",
       "properties": {
