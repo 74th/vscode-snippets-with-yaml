@@ -24,18 +24,19 @@ function getSnippetsDir(): string {
     if (vscode.env.appName.includes("OSS")) {
         codeName = "Code - OSS";
     }
-    let result = "";
+    let base = "";
     switch (os.platform()) {
         case "win32":
+            base = process.env["APPDATA"] as string;
             break;
         case "darwin":
-            result = path.join(process.env["HOME"] as string, "Library", "Application Support");
+            base = path.join(process.env["HOME"] as string, "Library", "Application Support");
             break;
         default:
-            result = path.join(process.env["HOME"] as string, ".config");
+            base = path.join(process.env["HOME"] as string, ".config");
             break;
     }
-    return path.join(result, codeName, "User", "snippets");
+    return path.join(base, codeName, "User", "snippets");
 }
 
 async function getAvailableSnippets(snippetsDir: string): Promise<string[]> {
@@ -139,7 +140,7 @@ async function convertYAMLSnippets(jsonPath: string, available: boolean): Promis
 }
 
 function isYAMLSnippetsPath(yamlPath: string, snippetsDir: string): boolean {
-    return snippetsDir === path.dirname(yamlPath) && path.basename(yamlPath).endsWith(".json.yaml");
+    return snippetsDir.toLowerCase() === path.dirname(yamlPath).toLowerCase() && path.basename(yamlPath).endsWith(".json.yaml");
 }
 
 async function convertJSONSnippets(yamlPath: string) {
