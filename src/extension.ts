@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { promises as fs, open } from 'fs'
+import { promises as fs, open } from 'fs';
 import * as os from 'os';
 import * as process from 'process';
 
@@ -17,25 +17,25 @@ type SnippetDocument = { [index: string]: Snippet };
 
 function getSnippetsDir(): string {
 
-    let codeName = "Code"
+    let codeName = "Code";
     if (vscode.env.appName.includes("Insiders")) {
-        codeName = "Code - Insiders"
+        codeName = "Code - Insiders";
     }
     if (vscode.env.appName.includes("OSS")) {
-        codeName = "Code - OSS"
+        codeName = "Code - OSS";
     }
     let result = "";
     switch (os.platform()) {
         case "win32":
             break;
         case "darwin":
-            result = path.join(process.env["HOME"] as string, "Library", "Application Support")
+            result = path.join(process.env["HOME"] as string, "Library", "Application Support");
             break;
         default:
-            result = path.join(process.env["HOME"] as string, ".config")
+            result = path.join(process.env["HOME"] as string, ".config");
             break;
     }
-    return path.join(result, codeName, "User", "snippets")
+    return path.join(result, codeName, "User", "snippets");
 }
 
 async function getAvailableSnippets(snippetsDir: string): Promise<string[]> {
@@ -66,7 +66,7 @@ interface PickSnippetsItem extends vscode.QuickPickItem {
 async function listSnipeetsLanguageItems(snippetsDir: string): Promise<PickSnippetsItem[]> {
     const result: PickSnippetsItem[] = [];
 
-    const langList = await vscode.languages.getLanguages()
+    const langList = await vscode.languages.getLanguages();
     const availableList = await getAvailableSnippets(snippetsDir);
 
     let openedLangID: string | null = null;
@@ -80,7 +80,7 @@ async function listSnipeetsLanguageItems(snippetsDir: string): Promise<PickSnipp
             description: "opened file " + (available ? openedLangID + ".json" : ""),
             available: availableList.includes(openedLangID),
             path: path.join(snippetsDir, openedLangID + ".json"),
-        })
+        });
     }
     for (const langID of availableList) {
         if (langID === openedLangID) {
@@ -92,7 +92,7 @@ async function listSnipeetsLanguageItems(snippetsDir: string): Promise<PickSnipp
             description: langID + ".json",
             available: true,
             path: path.join(snippetsDir, langID + ".json"),
-        })
+        });
     }
 
     for (const langID of langList) {
@@ -104,7 +104,7 @@ async function listSnipeetsLanguageItems(snippetsDir: string): Promise<PickSnipp
             languageID: langID,
             available: false,
             path: path.join(snippetsDir, langID + ".json"),
-        })
+        });
     }
     return result;
 }
@@ -113,10 +113,10 @@ async function convertYAMLSnippets(jsonPath: string, available: boolean): Promis
     const yamlPath = jsonPath + ".yaml";
     let doc: SnippetDocument = {};
     if (available) {
-        const docByte = await fs.readFile(jsonPath)
-        doc = jsoncParser.parse(docByte.toString("utf-8"))
+        const docByte = await fs.readFile(jsonPath);
+        doc = jsoncParser.parse(docByte.toString("utf-8"));
     } else {
-        doc = {}
+        doc = {};
         doc["Print to console"] = {
             prefix: "log",
             body: [
@@ -124,7 +124,7 @@ async function convertYAMLSnippets(jsonPath: string, available: boolean): Promis
                 "$2"
             ],
             description: "Log output to console"
-        }
+        };
     }
 
     for (const i in doc) {
@@ -138,11 +138,11 @@ async function convertYAMLSnippets(jsonPath: string, available: boolean): Promis
 }
 
 function isYAMLSnippetsPath(yamlPath: string, snippetsDir: string): boolean {
-    return snippetsDir == path.dirname(yamlPath) && path.basename(yamlPath).endsWith(".json.yaml");
+    return snippetsDir === path.dirname(yamlPath) && path.basename(yamlPath).endsWith(".json.yaml");
 }
 
 async function convertJSONSnippets(yamlPath: string) {
-    const doc = yaml.parse(await fs.readFile(yamlPath, { encoding: "utf-8" }))
+    const doc = yaml.parse(await fs.readFile(yamlPath, { encoding: "utf-8" }));
 
     for (const name in doc) {
         const body = doc[name]["body"];
@@ -154,7 +154,7 @@ async function convertJSONSnippets(yamlPath: string) {
     let jsonDoc = JSON.stringify(doc);
     jsonDoc = prettier.format(jsonDoc, { parser: "json" });
     const jsonPath = path.join(path.dirname(yamlPath), path.basename(yamlPath, ".yaml"));
-    await fs.writeFile(jsonPath, jsonDoc, { encoding: "utf-8" })
+    await fs.writeFile(jsonPath, jsonDoc, { encoding: "utf-8" });
 }
 
 
@@ -164,9 +164,9 @@ export async function activate(context: vscode.ExtensionContext) {
 
     let disposable = vscode.commands.registerCommand('editing-snippets-by-yaml.configureUserSnippets', async () => {
         const items = await listSnipeetsLanguageItems(snippetsDir);
-        const selected = await vscode.window.showQuickPick(items)
+        const selected = await vscode.window.showQuickPick(items);
         if (!selected) {
-            return
+            return;
         }
         const yamlPath = await convertYAMLSnippets(selected.path, selected.available);
         await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(yamlPath));
@@ -191,5 +191,4 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 
 
-// this method is called when your extension is deactivated
 export function deactivate() { }
