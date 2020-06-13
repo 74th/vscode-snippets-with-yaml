@@ -2,7 +2,7 @@
   "name": "editing-snippets-with-yaml",
   "displayName": "editing snippets with yaml",
   "description": "Editing snippets with YAML format",
-  "version": "0.9.0",
+  "version": "1.0.0",
   "publisher": "74th",
   "icon": "icon.png",
   "license": "MIT",
