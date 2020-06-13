@@ -133,6 +133,7 @@ async function convertYAMLSnippets(jsonPath: string, available: boolean): Promis
         }
     }
 
+    yaml.scalarOptions.str.fold.lineWidth = 1000;
     await fs.writeFile(yamlPath, yaml.stringify(doc), { encoding: "utf-8" });
     return yamlPath;
 }
@@ -157,7 +158,6 @@ async function convertJSONSnippets(yamlPath: string) {
     await fs.writeFile(jsonPath, jsonDoc, { encoding: "utf-8" });
 }
 
-
 export async function activate(context: vscode.ExtensionContext) {
 
     const snippetsDir = getSnippetsDir();
@@ -174,8 +174,8 @@ export async function activate(context: vscode.ExtensionContext) {
     });
     context.subscriptions.push(disposable);
 
-    disposable = vscode.workspace.onDidCloseTextDocument(async (e) => {
-        const yamlPath = e.fileName;
+    disposable = vscode.workspace.onDidCloseTextDocument(async (doc) => {
+        const yamlPath = doc.fileName;
         if (!isYAMLSnippetsPath(yamlPath, snippetsDir)) {
             return;
         }
@@ -185,6 +185,19 @@ export async function activate(context: vscode.ExtensionContext) {
             vscode.window.showErrorMessage(`cannot create json : ${e.message}`);
         }
         fs.unlink(yamlPath);
+    });
+    context.subscriptions.push(disposable);
+
+    disposable = vscode.workspace.onDidSaveTextDocument(async (doc) => {
+        const yamlPath = doc.fileName;
+        if (!isYAMLSnippetsPath(yamlPath, snippetsDir)) {
+            return;
+        }
+        try {
+            await convertJSONSnippets(yamlPath);
+        } catch (e) {
+            vscode.window.showErrorMessage(`cannot create json : ${e.message}`);
+        }
     });
     context.subscriptions.push(disposable);
 
