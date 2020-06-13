@@ -63,7 +63,7 @@ interface PickSnippetsItem extends vscode.QuickPickItem {
     available: boolean
 }
 
-async function listSnipeetsLanguageItems(snippetsDir: string): Promise<PickSnippetsItem[]> {
+async function listSnippetsLanguageItems(snippetsDir: string): Promise<PickSnippetsItem[]> {
     const result: PickSnippetsItem[] = [];
 
     const langList = await vscode.languages.getLanguages();
@@ -163,7 +163,7 @@ export async function activate(context: vscode.ExtensionContext) {
     const snippetsDir = getSnippetsDir();
 
     let disposable = vscode.commands.registerCommand('editing-snippets-by-yaml.configureUserSnippets', async () => {
-        const items = await listSnipeetsLanguageItems(snippetsDir);
+        const items = await listSnippetsLanguageItems(snippetsDir);
         const selected = await vscode.window.showQuickPick(items);
         if (!selected) {
             return;
