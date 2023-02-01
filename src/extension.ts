@@ -7,6 +7,7 @@ import * as yaml from 'yaml';
 import * as vscode from 'vscode';
 import * as jsoncParser from 'jsonc-parser';
 import * as prettier from 'prettier';
+import { ExecException } from 'child_process';
 
 interface Snippet {
     prefix: string
@@ -136,14 +137,14 @@ async function listWorkspaceSnippetsItems(snippetsDir: string): Promise<PickSnip
     availableList.forEach(workspaceSnippet => {
         result.push({
             label: workspaceSnippet.toString(),
-            languageID: "foo",
+            languageID: "",
             description: "Workspace snippets: " + workspaceSnippet.toString(),
             available: true,
             path: path.join(snippetsDir, workspaceSnippet + ".code-snippets"),
         });
-    })
+    });
 
-    return result
+    return result;
 }
 
 async function convertYAMLSnippets(jsonPath: string, available: boolean): Promise<string> {
@@ -197,7 +198,6 @@ async function convertJSONSnippets(yamlPath: string) {
 
 export async function activate(context: vscode.ExtensionContext) {
     const snippetsDir = getSnippetsDir();
-    const userOrWorkspace = { "user": { "ext": ".json", "path": snippetsDir }, "workspace": {} }
 
     let disposable = vscode.commands.registerCommand('editing-snippets-by-yaml.configureUserSnippets', async () => {
         const items = await listSnippetsLanguageItems(snippetsDir);
@@ -207,14 +207,13 @@ export async function activate(context: vscode.ExtensionContext) {
         }
         const yamlPath = await convertYAMLSnippets(selected.path, selected.available);
         await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(yamlPath));
-
     });
-
     context.subscriptions.push(disposable);
-    if (vscode.workspace.workspaceFolders) {
-        const workspaceSnippets = vscode.workspace.workspaceFolders[0].uri.fsPath + "\\.vscode";
-        userOrWorkspace["workspace"] = { "ext": ".code-snippets", "path": workspaceSnippets }
 
+    // If in a workspace, this option is available.
+    if (vscode.workspace.workspaceFolders) {
+
+        const workspaceSnippets = vscode.workspace.workspaceFolders[0].uri.fsPath + "\\.vscode";
         disposable = vscode.commands.registerCommand('editing-snippets-by-yaml.configureWorkplaceSnippets', async () => {
             const items = await listWorkspaceSnippetsItems(workspaceSnippets);
             const selected = await vscode.window.showQuickPick(items);
@@ -223,11 +222,11 @@ export async function activate(context: vscode.ExtensionContext) {
             }
             const yamlPath = await convertYAMLSnippets(selected.path, selected.available);
             await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(yamlPath));
-
         });
+
         context.subscriptions.push(disposable);
         disposable = vscode.workspace.onDidCloseTextDocument(async (doc) => {
-            const { yamlPath, directory, ext } = modeVariables(doc, workspaceSnippets, snippetsDir)
+            const { yamlPath, directory, ext } = modeVariables(doc, workspaceSnippets, snippetsDir);
             if (!isYAMLSnippetsPath(yamlPath, directory, ext)) {
                 return;
             }
@@ -241,7 +240,7 @@ export async function activate(context: vscode.ExtensionContext) {
         context.subscriptions.push(disposable);
 
         disposable = vscode.workspace.onDidSaveTextDocument(async (doc) => {
-            const { yamlPath, directory, ext } = modeVariables(doc, workspaceSnippets, snippetsDir)
+            const { yamlPath, directory, ext } = modeVariables(doc, workspaceSnippets, snippetsDir);
             if (!isYAMLSnippetsPath(yamlPath, directory, ext)) {
                 return;
             }
@@ -260,7 +259,7 @@ function modeVariables(doc: { fileName: string }, workspaceSnippets: string, sni
     const mode = yamlPath.includes(".code-snippets.yaml");
     const useDirectory = mode ? workspaceSnippets : snippetsDir;
     const useExt = mode ? ".code-snippets" : ".json";
-    return { "yamlPath": yamlPath, "directory": useDirectory, "ext": useExt }
+    return { "yamlPath": yamlPath, "directory": useDirectory, "ext": useExt };
 }
 
 export function deactivate() { }
