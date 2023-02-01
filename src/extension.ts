@@ -227,11 +227,8 @@ export async function activate(context: vscode.ExtensionContext) {
         });
         context.subscriptions.push(disposable);
         disposable = vscode.workspace.onDidCloseTextDocument(async (doc) => {
-            const yamlPath = doc.fileName;
-            const mode = yamlPath.includes(".code-snippets.yaml")
-            const useDirectory = mode ? workspaceSnippets : snippetsDir
-            const useExt = mode ? ".code-snippets" : ".json"
-            if (!isYAMLSnippetsPath(yamlPath, useDirectory, useExt)) {
+            const { yamlPath, directory, ext } = modeVariables(doc, workspaceSnippets, snippetsDir)
+            if (!isYAMLSnippetsPath(yamlPath, directory, ext)) {
                 return;
             }
             try {
@@ -244,11 +241,8 @@ export async function activate(context: vscode.ExtensionContext) {
         context.subscriptions.push(disposable);
 
         disposable = vscode.workspace.onDidSaveTextDocument(async (doc) => {
-            const yamlPath = doc.fileName;
-            const mode = yamlPath.includes(".code-snippets.yaml")
-            const useDirectory = mode ? workspaceSnippets : snippetsDir
-            const useExt = mode ? ".code-snippets" : ".json"
-            if (!isYAMLSnippetsPath(yamlPath, useDirectory, useExt)) {
+            const { yamlPath, directory, ext } = modeVariables(doc, workspaceSnippets, snippetsDir)
+            if (!isYAMLSnippetsPath(yamlPath, directory, ext)) {
                 return;
             }
             try {
@@ -261,5 +255,12 @@ export async function activate(context: vscode.ExtensionContext) {
     }
 }
 
+function modeVariables(doc: { fileName: string }, workspaceSnippets: string, snippetsDir: string) {
+    const yamlPath = doc.fileName;
+    const mode = yamlPath.includes(".code-snippets.yaml");
+    const useDirectory = mode ? workspaceSnippets : snippetsDir;
+    const useExt = mode ? ".code-snippets" : ".json";
+    return { "yamlPath": yamlPath, "directory": useDirectory, "ext": useExt }
+}
 
 export function deactivate() { }
