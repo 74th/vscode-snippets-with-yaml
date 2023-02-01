@@ -1,0 +1,169 @@
+{
+  "Collection Response": {
+    "scope": "yaml",
+    "prefix": "OASCollectionResponse",
+    "body": [
+      "ExampleCollectionResponse:",
+      "  title: Example Collection Response",
+      "  description: Reseponse that contains the default base collection properties and a `Data` array with \"Example\" entities.",
+      "  type: object",
+      "  allOf:",
+      "    - \\$ref: ../../Components/schemas.yaml#/CollectionResponseBase",
+      "    - type: object",
+      "      properties:",
+      "        Data:",
+      "          type: array",
+      "          description: |-",
+      "            This array contains the requested entities.",
+      "            If no entities can be found for the provided query parameters, an empty list is returned.",
+      "          items:",
+      "            \\$ref: '#/ExampleO            const yamlPath = doc.fileName;",
+      "        const mode = yamlPath.includes(\".code-snippets.yaml\")",
+      "        const useDirectory = mode ? workspaceSnippets : snippetsDir",
+      "        const useExt = mode ? \".code-snippets\" : \".json\""
+    ]
+  },
+  "Object": {
+    "scope": "yaml",
+    "prefix": "OASObject",
+    "body": [
+      "ExampleObject:",
+      "  title: Example Object",
+      "  description: Example object description",
+      "  type: object",
+      "  properties:",
+      "    ExampleString:",
+      "      \\$ref: 'types.yaml#/ExampleString'"
+    ]
+  },
+  "Enum": {
+    "scope": "yaml",
+    "prefix": "OASEnum",
+    "body": [
+      "ExampleEnum:",
+      "  title: Example Enum",
+      "  description: |-",
+      "    Example description",
+      "  type: string",
+      "  enum:",
+      "    - Direct",
+      "    - Linked",
+      "  x-enum-descriptions:",
+      "    Direct: Direct",
+      "    Linked: Linked",
+      "  example: Direct"
+    ]
+  },
+  "String": {
+    "scope": "yaml",
+    "prefix": "OASString",
+    "body": [
+      "ExampleString:",
+      "  title: Example String",
+      "  description: |-",
+      "    Example description",
+      "  type: string",
+      "  example: foo"
+    ]
+  },
+  "Number": {
+    "scope": "yaml",
+    "prefix": "OASNumber",
+    "body": [
+      "ExampleNumber:",
+      "  title: Example Number",
+      "  description: |-",
+      "    Example description",
+      "  type: number",
+      "  format: double",
+      "  example: 3.03"
+    ]
+  },
+  "Integer": {
+    "scope": "yaml",
+    "prefix": "OASInteger",
+    "body": [
+      "ExampleInteger:",
+      "  title: Example Number",
+      "  description: |-",
+      "    Example description",
+      "  type: integer",
+      "  format: int32",
+      "  example: 3"
+    ]
+  },
+  "x-linter-exemptions": {
+    "scope": "yaml",
+    "prefix": "x-linter-exemptions",
+    "body": ["x-linter-exemptions:", "  - SchemaCasing"]
+  },
+  "x-network-visibility": {
+    "scope": "yaml",
+    "prefix": "x-network-visibility",
+    "body": "x-network-visibility: internal"
+  },
+  "x-required-permissions": {
+    "scope": "yaml",
+    "prefix": "x-required-permissions",
+    "body": [
+      "x-required-permissions:",
+      "  - \\$ref: ../../../Components/permissions.yaml#/OAPI.OP.View"
+    ]
+  },
+  "x-classification": {
+    "scope": "yaml",
+    "prefix": "x-classification",
+    "body": "x-classification: titanium"
+  },
+  "type": {
+    "scope": "yaml",
+    "prefix": "Comp Type",
+    "body": "\\$ref: ../../Components/types.yaml#/AccountKey"
+  },
+  "schema": {
+    "scope": "yaml",
+    "prefix": "Comp Schema",
+    "body": "\\$ref: ../../Components/schemas.yaml#/CollectionResponseBase"
+  },
+  "EndpointMethod": {
+    "scope": "yaml",
+    "prefix": "OASEndpoint",
+    "body": [
+      "get:",
+      "  summary: Example Summary",
+      "  operationId: get-sg-v1-resource",
+      "  description: |-",
+      "    This is a description",
+      "  tags:",
+      "    - ValidTag",
+      "  security:",
+      "    - OpenAPIAccessToken: [read]",
+      "    - OpenAPIOAuth2SIM: [read]",
+      "    - OpenAPIOAuth2LIVE: [read]",
+      "  responses:",
+      "    '200':",
+      "      description: OK (Success)",
+      "      content:",
+      "        application/json:",
+      "          schema:",
+      "            \\$ref: '../schemas.yaml#/ExampleCollectionResponse'",
+      "    '400':",
+      "      description: Bad Request",
+      "      content:",
+      "        application/json:",
+      "          schema:",
+      "            oneOf:",
+      "              - \\$ref: ../../../Components/errorschemas.yaml#/RequestValidationError",
+      "    '401':",
+      "      \\$ref: ../../../Components/errorresponses.yaml#/401UnauthorizedResponse",
+      "    '403':",
+      "      \\$ref: ../../../Components/errorresponses.yaml#/403BForbiddenResponse",
+      "    '404':",
+      "      \\$ref: ../../../Components/errorresponses.yaml#/404NotFoundResponse",
+      "    '500':",
+      "      \\$ref: ../../../Components/errorresponses.yaml#/500InternalServerErrorResponse",
+      "    '503':",
+      "      \\$ref: ../../../Components/errorresponses.yaml#/503ServiceUnavailableResponse"
+    ]
+  }
+}
