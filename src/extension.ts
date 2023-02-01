@@ -51,7 +51,7 @@ async function getAvailableSnippets(snippetsDir: string): Promise<string[]> {
     }
     const languages: string[] = [];
     for (const file of files) {
-        if ([".json", ".code-snippets"].includes(path.extname(file))) {
+        if (path.extname(file) !== ".json") {
             continue;
         }
         languages.push(path.basename(file, path.extname(file)));
@@ -70,7 +70,7 @@ async function getWorkspaceSnippets(snippetsDir: string): Promise<string[]> {
     }
     const workspaceSnippets: string[] = [];
     for (const file of files) {
-        if (![".code-snippets"].includes(path.extname(file))) {
+        if (path.extname(file) !== ".code-snippets") {
             continue;
         }
         workspaceSnippets.push(path.basename(file, path.extname(file)));
