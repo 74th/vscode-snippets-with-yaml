@@ -7,7 +7,6 @@ import * as yaml from 'yaml';
 import * as vscode from 'vscode';
 import * as jsoncParser from 'jsonc-parser';
 import * as prettier from 'prettier';
-import { ExecException } from 'child_process';
 
 interface Snippet {
     prefix: string
