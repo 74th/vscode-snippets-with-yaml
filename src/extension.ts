@@ -216,10 +216,18 @@ export async function activate(context: vscode.ExtensionContext) {
         const workspaceSnippets = vscode.workspace.workspaceFolders[0].uri.fsPath + "\\.vscode";
         disposable = vscode.commands.registerCommand('editing-snippets-by-yaml.configureWorkplaceSnippets', async () => {
             const items = await listWorkspaceSnippetsItems(workspaceSnippets);
-            const selected = await vscode.window.showQuickPick(items);
+            var selected;
+
+            if (items.length && items.length > 1) {
+                selected = await vscode.window.showQuickPick(items);
+            } else if (items.length === 1) {
+                selected = items[0]
+            }
+
             if (!selected) {
                 return;
             }
+
             const yamlPath = await convertYAMLSnippets(selected.path, selected.available);
             await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(yamlPath));
         });
