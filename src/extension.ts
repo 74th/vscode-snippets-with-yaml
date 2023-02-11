@@ -8,6 +8,9 @@ import * as vscode from 'vscode';
 import * as jsoncParser from 'jsonc-parser';
 import * as prettier from 'prettier';
 
+const USER_SNIPPETS_EXT = ".json";
+const WORKSPACE_SNIPPETS_EXT = ".code-snippets";
+
 interface Snippet {
     prefix: string
     body: string[] | string
@@ -50,7 +53,7 @@ async function getAvailableSnippets(snippetsDir: string): Promise<string[]> {
     }
     const languages: string[] = [];
     for (const file of files) {
-        if (path.extname(file) !== ".json") {
+        if (path.extname(file) !== USER_SNIPPETS_EXT) {
             continue;
         }
         languages.push(path.basename(file, path.extname(file)));
@@ -69,7 +72,7 @@ async function getWorkspaceSnippets(snippetsDir: string): Promise<string[]> {
     }
     const workspaceSnippets: string[] = [];
     for (const file of files) {
-        if (path.extname(file) !== ".code-snippets") {
+        if (path.extname(file) !== WORKSPACE_SNIPPETS_EXT) {
             continue;
         }
         workspaceSnippets.push(path.basename(file, path.extname(file)));
@@ -97,9 +100,9 @@ async function listSnippetsLanguageItems(snippetsDir: string): Promise<PickSnipp
         result.push({
             label: openedLangID,
             languageID: openedLangID,
-            description: "opened file " + (available ? openedLangID + ".json" : ""),
+            description: "opened file " + (available ? openedLangID + USER_SNIPPETS_EXT : ""),
             available: availableList.includes(openedLangID),
-            path: path.join(snippetsDir, openedLangID + ".json"),
+            path: path.join(snippetsDir, openedLangID + USER_SNIPPETS_EXT),
         });
     }
     for (const langID of availableList) {
@@ -109,9 +112,9 @@ async function listSnippetsLanguageItems(snippetsDir: string): Promise<PickSnipp
         result.push({
             label: langID,
             languageID: langID,
-            description: langID + ".json",
+            description: langID + USER_SNIPPETS_EXT,
             available: true,
-            path: path.join(snippetsDir, langID + ".json"),
+            path: path.join(snippetsDir, langID + USER_SNIPPETS_EXT),
         });
     }
 
@@ -123,7 +126,7 @@ async function listSnippetsLanguageItems(snippetsDir: string): Promise<PickSnipp
             label: langID,
             languageID: langID,
             available: false,
-            path: path.join(snippetsDir, langID + ".json"),
+            path: path.join(snippetsDir, langID + USER_SNIPPETS_EXT),
         });
     }
     return result;
@@ -132,16 +135,46 @@ async function listSnippetsLanguageItems(snippetsDir: string): Promise<PickSnipp
 async function listWorkspaceSnippetsItems(snippetsDir: string): Promise<PickSnippetsItem[]> {
     const result: PickSnippetsItem[] = [];
 
+    const langList = await vscode.languages.getLanguages();
     const availableList = await getWorkspaceSnippets(snippetsDir);
+
+    let openedLangID: string | null = null;
+
+    if (vscode.window.activeTextEditor) {
+        openedLangID = vscode.window.activeTextEditor.document.languageId;
+        const available = availableList.includes(openedLangID);
+        result.push({
+            label: openedLangID,
+            languageID: openedLangID,
+            description: "opened file " + (available ? openedLangID + WORKSPACE_SNIPPETS_EXT : ""),
+            available: availableList.includes(openedLangID),
+            path: path.join(snippetsDir, openedLangID + WORKSPACE_SNIPPETS_EXT),
+        });
+    }
     availableList.forEach(workspaceSnippet => {
+        if (workspaceSnippet === openedLangID) {
+            return;
+        }
         result.push({
             label: workspaceSnippet.toString(),
             languageID: "",
             description: "Workspace snippets: " + workspaceSnippet.toString(),
             available: true,
-            path: path.join(snippetsDir, workspaceSnippet + ".code-snippets"),
+            path: path.join(snippetsDir, workspaceSnippet + WORKSPACE_SNIPPETS_EXT),
         });
     });
+
+    for (const langID of langList) {
+        if (langID === openedLangID || availableList.includes(langID)) {
+            continue;
+        }
+        result.push({
+            label: langID,
+            languageID: langID,
+            available: false,
+            path: path.join(snippetsDir, langID + USER_SNIPPETS_EXT),
+        });
+    }
 
     return result;
 }
@@ -212,7 +245,7 @@ export async function activate(context: vscode.ExtensionContext) {
     // If in a workspace, this option is available.
     if (vscode.workspace.workspaceFolders) {
 
-        const workspaceSnippets = vscode.workspace.workspaceFolders[0].uri.fsPath + "\\.vscode";
+        const workspaceSnippets = path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, ".vscode");
         disposable = vscode.commands.registerCommand('editing-snippets-by-yaml.configureWorkplaceSnippets', async () => {
             const items = await listWorkspaceSnippetsItems(workspaceSnippets);
             var selected;
@@ -220,7 +253,7 @@ export async function activate(context: vscode.ExtensionContext) {
             if (items.length && items.length > 1) {
                 selected = await vscode.window.showQuickPick(items);
             } else if (items.length === 1) {
-                selected = items[0]
+                selected = items[0];
             }
 
             if (!selected) {
@@ -240,7 +273,7 @@ export async function activate(context: vscode.ExtensionContext) {
             try {
                 await convertJSONSnippets(yamlPath);
             } catch (e) {
-                vscode.window.showErrorMessage(`cannot create json : ${e.message}`);
+                vscode.window.showErrorMessage(`cannot create json : ${e}`);
             }
             fs.unlink(yamlPath);
         });
@@ -254,7 +287,7 @@ export async function activate(context: vscode.ExtensionContext) {
             try {
                 await convertJSONSnippets(yamlPath);
             } catch (e) {
-                vscode.window.showErrorMessage(`cannot create json : ${e.message}`);
+                vscode.window.showErrorMessage(`cannot create json : ${e}`);
             }
         });
         context.subscriptions.push(disposable);
@@ -263,9 +296,9 @@ export async function activate(context: vscode.ExtensionContext) {
 
 function modeVariables(doc: { fileName: string }, workspaceSnippets: string, snippetsDir: string) {
     const yamlPath = doc.fileName;
-    const mode = yamlPath.includes(".code-snippets.yaml");
+    const mode = yamlPath.includes(WORKSPACE_SNIPPETS_EXT + ".yaml");
     const useDirectory = mode ? workspaceSnippets : snippetsDir;
-    const useExt = mode ? ".code-snippets" : ".json";
+    const useExt = mode ? WORKSPACE_SNIPPETS_EXT : USER_SNIPPETS_EXT;
     return { "yamlPath": yamlPath, "directory": useDirectory, "ext": useExt };
 }
 
