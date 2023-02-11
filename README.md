@@ -26,6 +26,7 @@ Select a language.
 
 ## Change Log
 
+- 1.2.0 support workspace snippets
 - 1.1.0 work as UI extension
 - 1.0.1 support windows
 - 1.0.0 release

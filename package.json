@@ -2,7 +2,7 @@
   "name": "editing-snippets-with-yaml",
   "displayName": "editing snippets with yaml",
   "description": "Editing snippets with YAML format",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "publisher": "74th",
   "icon": "icon.png",
   "license": "MIT",
@@ -32,10 +32,7 @@
     "Snippets",
     "Other"
   ],
-  "activationEvents": [
-    "onCommand:editing-snippets-by-yaml.configureUserSnippets",
-    "onCommand:editing-snippets-by-yaml.configureWorkplaceSnippets"
-  ],
+  "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
