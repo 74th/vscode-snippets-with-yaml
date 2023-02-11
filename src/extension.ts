@@ -53,9 +53,28 @@ async function getAvailableSnippets(snippetsDir: string): Promise<string[]> {
         if (path.extname(file) !== ".json") {
             continue;
         }
-        languages.push(path.basename(file, ".json"));
+        languages.push(path.basename(file, path.extname(file)));
     }
     return languages;
+}
+
+async function getWorkspaceSnippets(snippetsDir: string): Promise<string[]> {
+
+    let files: string[];
+    try {
+        files = await fs.readdir(snippetsDir);
+    } catch (e) {
+        console.log(e);
+        return [];
+    }
+    const workspaceSnippets: string[] = [];
+    for (const file of files) {
+        if (path.extname(file) !== ".code-snippets") {
+            continue;
+        }
+        workspaceSnippets.push(path.basename(file, path.extname(file)));
+    }
+    return workspaceSnippets;
 }
 
 interface PickSnippetsItem extends vscode.QuickPickItem {
@@ -110,6 +129,23 @@ async function listSnippetsLanguageItems(snippetsDir: string): Promise<PickSnipp
     return result;
 }
 
+async function listWorkspaceSnippetsItems(snippetsDir: string): Promise<PickSnippetsItem[]> {
+    const result: PickSnippetsItem[] = [];
+
+    const availableList = await getWorkspaceSnippets(snippetsDir);
+    availableList.forEach(workspaceSnippet => {
+        result.push({
+            label: workspaceSnippet.toString(),
+            languageID: "",
+            description: "Workspace snippets: " + workspaceSnippet.toString(),
+            available: true,
+            path: path.join(snippetsDir, workspaceSnippet + ".code-snippets"),
+        });
+    });
+
+    return result;
+}
+
 async function convertYAMLSnippets(jsonPath: string, available: boolean): Promise<string> {
     const yamlPath = jsonPath + ".yaml";
     let doc: SnippetDocument = {};
@@ -139,8 +175,8 @@ async function convertYAMLSnippets(jsonPath: string, available: boolean): Promis
     return yamlPath;
 }
 
-function isYAMLSnippetsPath(yamlPath: string, snippetsDir: string): boolean {
-    return snippetsDir.toLowerCase() === path.dirname(yamlPath).toLowerCase() && path.basename(yamlPath).endsWith(".json.yaml");
+function isYAMLSnippetsPath(yamlPath: string, snippetsDir: string, useExt: string): boolean {
+    return snippetsDir.toLowerCase() === path.dirname(yamlPath).toLowerCase() && path.basename(yamlPath).endsWith(useExt + ".yaml");
 }
 
 async function convertJSONSnippets(yamlPath: string) {
@@ -160,7 +196,6 @@ async function convertJSONSnippets(yamlPath: string) {
 }
 
 export async function activate(context: vscode.ExtensionContext) {
-
     const snippetsDir = getSnippetsDir();
 
     let disposable = vscode.commands.registerCommand('editing-snippets-by-yaml.configureUserSnippets', async () => {
@@ -171,38 +206,67 @@ export async function activate(context: vscode.ExtensionContext) {
         }
         const yamlPath = await convertYAMLSnippets(selected.path, selected.available);
         await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(yamlPath));
-
     });
     context.subscriptions.push(disposable);
 
-    disposable = vscode.workspace.onDidCloseTextDocument(async (doc) => {
-        const yamlPath = doc.fileName;
-        if (!isYAMLSnippetsPath(yamlPath, snippetsDir)) {
-            return;
-        }
-        try {
-            await convertJSONSnippets(yamlPath);
-        } catch (e) {
-            vscode.window.showErrorMessage(`cannot create json : ${e.message}`);
-        }
-        fs.unlink(yamlPath);
-    });
-    context.subscriptions.push(disposable);
+    // If in a workspace, this option is available.
+    if (vscode.workspace.workspaceFolders) {
 
-    disposable = vscode.workspace.onDidSaveTextDocument(async (doc) => {
-        const yamlPath = doc.fileName;
-        if (!isYAMLSnippetsPath(yamlPath, snippetsDir)) {
-            return;
-        }
-        try {
-            await convertJSONSnippets(yamlPath);
-        } catch (e) {
-            vscode.window.showErrorMessage(`cannot create json : ${e.message}`);
-        }
-    });
-    context.subscriptions.push(disposable);
+        const workspaceSnippets = vscode.workspace.workspaceFolders[0].uri.fsPath + "\\.vscode";
+        disposable = vscode.commands.registerCommand('editing-snippets-by-yaml.configureWorkplaceSnippets', async () => {
+            const items = await listWorkspaceSnippetsItems(workspaceSnippets);
+            var selected;
 
+            if (items.length && items.length > 1) {
+                selected = await vscode.window.showQuickPick(items);
+            } else if (items.length === 1) {
+                selected = items[0]
+            }
+
+            if (!selected) {
+                return;
+            }
+
+            const yamlPath = await convertYAMLSnippets(selected.path, selected.available);
+            await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(yamlPath));
+        });
+
+        context.subscriptions.push(disposable);
+        disposable = vscode.workspace.onDidCloseTextDocument(async (doc) => {
+            const { yamlPath, directory, ext } = modeVariables(doc, workspaceSnippets, snippetsDir);
+            if (!isYAMLSnippetsPath(yamlPath, directory, ext)) {
+                return;
+            }
+            try {
+                await convertJSONSnippets(yamlPath);
+            } catch (e) {
+                vscode.window.showErrorMessage(`cannot create json : ${e.message}`);
+            }
+            fs.unlink(yamlPath);
+        });
+        context.subscriptions.push(disposable);
+
+        disposable = vscode.workspace.onDidSaveTextDocument(async (doc) => {
+            const { yamlPath, directory, ext } = modeVariables(doc, workspaceSnippets, snippetsDir);
+            if (!isYAMLSnippetsPath(yamlPath, directory, ext)) {
+                return;
+            }
+            try {
+                await convertJSONSnippets(yamlPath);
+            } catch (e) {
+                vscode.window.showErrorMessage(`cannot create json : ${e.message}`);
+            }
+        });
+        context.subscriptions.push(disposable);
+    }
 }
 
+function modeVariables(doc: { fileName: string }, workspaceSnippets: string, snippetsDir: string) {
+    const yamlPath = doc.fileName;
+    const mode = yamlPath.includes(".code-snippets.yaml");
+    const useDirectory = mode ? workspaceSnippets : snippetsDir;
+    const useExt = mode ? ".code-snippets" : ".json";
+    return { "yamlPath": yamlPath, "directory": useDirectory, "ext": useExt };
+}
 
 export function deactivate() { }

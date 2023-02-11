@@ -33,7 +33,8 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:editing-snippets-by-yaml.configureUserSnippets"
+    "onCommand:editing-snippets-by-yaml.configureUserSnippets",
+    "onCommand:editing-snippets-by-yaml.configureWorkplaceSnippets"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -41,6 +42,10 @@
       {
         "command": "editing-snippets-by-yaml.configureUserSnippets",
         "title": "Preferences: Configure User Snippets (YAML)"
+      },
+      {
+        "command": "editing-snippets-by-yaml.configureWorkplaceSnippets",
+        "title": "Preferences: Configure Workplace Snippets (YAML)"
       }
     ]
   },
@@ -66,8 +71,10 @@
     "vscode-test": "^1.3.0"
   },
   "dependencies": {
+    "@vscode/vsce": "^2.17.0",
     "jsonc-parser": "^2.2.1",
     "prettier": "^2.0.5",
-    "yaml": "^1.10.0"
+    "yaml": "^1.10.0",
+    "yarn": "^1.22.19"
   }
 }
